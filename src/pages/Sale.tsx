@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Trash2, Printer } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Download } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import jsPDF from "jspdf";
 
 interface Product {
   id: string;
@@ -161,89 +162,96 @@ const Sale = () => {
     }
 
     toast.success("Venda finalizada!");
-    printReceipt(data);
+    downloadPDF(data);
     navigate("/historico");
   };
 
-  const printReceipt = (sale: any) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    const itemsHtml = sale.items
-      .map(
-        (item: any) => `
-        <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.product_name}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity} ${item.unit}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">R$ ${item.price.toFixed(2)}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">R$ ${item.subtotal.toFixed(2)}</td>
-        </tr>
-      `
-      )
-      .join("");
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Nota de Venda</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .logo { max-width: 150px; max-height: 150px; margin: 0 auto 10px; display: block; }
-            .shop-name { color: #059669; text-align: center; font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
-            h1 { color: #059669; text-align: center; font-size: 1.2em; margin-top: 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background-color: #059669; color: white; padding: 12px; text-align: left; }
-            .total-row { font-weight: bold; font-size: 1.2em; background-color: #f3f4f6; }
-            .info { margin: 20px 0; color: #6b7280; }
-            @media print {
-              button { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo" />` : ''}
-            <div class="shop-name">${shopName || 'Minha Loja'}</div>
-          </div>
-          <h1>Nota de Venda</h1>
-          <div class="info">
-            <p><strong>Cliente:</strong> ${sale.customer_name}</p>
-            <p><strong>Data:</strong> ${new Date(sale.created_at).toLocaleString("pt-BR")}</p>
-            <p><strong>Nota:</strong> #${sale.id.slice(0, 8)}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th style="text-align: center;">Quantidade</th>
-                <th style="text-align: right;">Preço Unit.</th>
-                <th style="text-align: right;">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-              ${sale.shipping_fee > 0 ? `
-                <tr>
-                  <td colspan="3" style="padding: 12px; text-align: right; font-weight: 500;">Frete:</td>
-                  <td style="padding: 12px; text-align: right; font-weight: 500;">R$ ${sale.shipping_fee.toFixed(2)}</td>
-                </tr>
-              ` : ''}
-              <tr class="total-row">
-                <td colspan="3" style="padding: 12px; text-align: right;">TOTAL:</td>
-                <td style="padding: 12px; text-align: right;">R$ ${sale.total.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background-color: #059669; color: white; border: none; border-radius: 6px; cursor: pointer;">
-            Imprimir
-          </button>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
+  const downloadPDF = (sale: any) => {
+    const pdf = new jsPDF();
+    
+    // Configurações do PDF
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = 30;
+    
+    // Cabeçalho
+    pdf.setFontSize(20);
+    pdf.setTextColor(5, 150, 105); // Verde
+    pdf.text(shopName || 'Minha Loja', pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 15;
+    pdf.setFontSize(16);
+    pdf.text('Nota de Venda', pageWidth / 2, yPosition, { align: 'center' });
+    
+    // Informações da venda
+    yPosition += 20;
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`Cliente: ${sale.customer_name}`, margin, yPosition);
+    
+    yPosition += 8;
+    pdf.text(`Data: ${new Date(sale.created_at).toLocaleString('pt-BR')}`, margin, yPosition);
+    
+    yPosition += 8;
+    pdf.text(`Nota: #${sale.id.slice(0, 8)}`, margin, yPosition);
+    
+    // Linha separadora
+    yPosition += 15;
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    
+    // Cabeçalho da tabela
+    yPosition += 15;
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Produto', margin, yPosition);
+    pdf.text('Qtd', margin + 80, yPosition);
+    pdf.text('Preço Unit.', margin + 110, yPosition);
+    pdf.text('Subtotal', margin + 150, yPosition);
+    
+    // Linha do cabeçalho
+    yPosition += 3;
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    
+    // Itens da venda
+    yPosition += 10;
+    pdf.setFont(undefined, 'normal');
+    
+    sale.items.forEach((item: any) => {
+      if (yPosition > 250) { // Nova página se necessário
+        pdf.addPage();
+        yPosition = 30;
+      }
+      
+      pdf.text(item.product_name, margin, yPosition);
+      pdf.text(`${item.quantity} ${item.unit}`, margin + 80, yPosition);
+      pdf.text(`R$ ${item.price.toFixed(2)}`, margin + 110, yPosition);
+      pdf.text(`R$ ${item.subtotal.toFixed(2)}`, margin + 150, yPosition);
+      
+      yPosition += 8;
+    });
+    
+    // Frete (se houver)
+    if (sale.shipping_fee > 0) {
+      yPosition += 5;
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Frete:', margin + 110, yPosition);
+      pdf.text(`R$ ${sale.shipping_fee.toFixed(2)}`, margin + 150, yPosition);
+      yPosition += 8;
+    }
+    
+    // Total
+    yPosition += 10;
+    pdf.line(margin + 100, yPosition - 5, pageWidth - margin, yPosition - 5);
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('TOTAL:', margin + 110, yPosition);
+    pdf.text(`R$ ${sale.total.toFixed(2)}`, margin + 150, yPosition);
+    
+    // Download do PDF
+    const fileName = `nota-venda-${sale.id.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    pdf.save(fileName);
+    
+    toast.success('PDF baixado com sucesso!');
   };
 
   return (
