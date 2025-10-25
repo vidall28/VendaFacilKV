@@ -323,9 +323,9 @@ const Sale = () => {
             pdf.setTextColor(255, 255, 255);
             pdf.setFont(undefined, 'bold');
             pdf.text('PRODUTO', margin + 5, yPosition + 8);
-            pdf.text('QUANTIDADE', margin + 80, yPosition + 8);
-            pdf.text('PREÇO UNIT.', margin + 125, yPosition + 8);
-            pdf.text('SUBTOTAL', margin + 160, yPosition + 8);
+            pdf.text('QTD', margin + 70, yPosition + 8);
+            pdf.text('PREÇO UNIT.', margin + 100, yPosition + 8);
+            pdf.text('SUBTOTAL', margin + 140, yPosition + 8);
             
             yPosition += 12;
             pdf.setFont(undefined, 'normal');
@@ -345,9 +345,9 @@ const Sale = () => {
               
               pdf.setFontSize(9);
               pdf.text(item.product_name, margin + 5, yPosition + 7);
-              pdf.text(item.quantity + ' ' + item.unit, margin + 80, yPosition + 7);
-              pdf.text('R$ ' + item.price.toFixed(2), margin + 125, yPosition + 7);
-              pdf.text('R$ ' + item.subtotal.toFixed(2), margin + 160, yPosition + 7);
+              pdf.text(item.quantity + ' ' + item.unit, margin + 70, yPosition + 7);
+              pdf.text('R$ ' + item.price.toFixed(2), margin + 100, yPosition + 7);
+              pdf.text('R$ ' + item.subtotal.toFixed(2), margin + 140, yPosition + 7);
               
               pdf.setDrawColor(232, 232, 232);
               pdf.setLineWidth(0.2);
@@ -364,8 +364,8 @@ const Sale = () => {
             pdf.line(margin, yPosition, pageWidth - margin, yPosition);
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'bold');
-            pdf.text('Frete:', margin + 125, yPosition + 7);
-            pdf.text('R$ ${sale.shipping_fee.toFixed(2)}', margin + 160, yPosition + 7);
+            pdf.text('Frete:', margin + 100, yPosition + 7);
+            pdf.text('R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 7);
             yPosition += 10;
             ` : ''}
             
@@ -379,8 +379,8 @@ const Sale = () => {
             pdf.setFontSize(12);
             pdf.setFont(undefined, 'bold');
             pdf.setTextColor(31, 41, 55);
-            pdf.text('TOTAL:', margin + 125, yPosition + 10);
-            pdf.text('R$ ${sale.total.toFixed(2)}', margin + 160, yPosition + 10);
+            pdf.text('TOTAL:', margin + 100, yPosition + 10);
+            pdf.text('R$ ${sale.total.toFixed(2)}', margin + 140, yPosition + 10);
             
             var clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
             var date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
