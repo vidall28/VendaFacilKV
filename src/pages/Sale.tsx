@@ -277,32 +277,16 @@ const Sale = () => {
     // Função JavaScript para download do PDF que será injetada na nova página
     const pdfScript = `
       function downloadPDF() {
-        // Importa jsPDF via CDN
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         script.onload = function() {
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF();
-          
           const pageWidth = pdf.internal.pageSize.getWidth();
           const margin = 20;
           let yPosition = 25;
           
-          // Logo (se existir)
-          ${logoUrl ? `
-          const logoImg = new Image();
-          logoImg.crossOrigin = 'anonymous';
-          logoImg.onload = function() {
-            pdf.addImage(logoImg, 'JPEG', pageWidth/2 - 15, yPosition, 30, 30);
-            generatePDFContent();
-          };
-          logoImg.src = '${logoUrl}';
-          
           function generatePDFContent() {
-            yPosition += 40;
-          ` : 'generatePDFContent(); function generatePDFContent() {'}
-          
-            // Cabeçalho da empresa
             pdf.setFontSize(22);
             pdf.setTextColor(5, 150, 105);
             pdf.setFont(undefined, 'bold');
@@ -313,18 +297,14 @@ const Sale = () => {
             pdf.setTextColor(5, 150, 105);
             pdf.text('Nota de Venda', pageWidth / 2, yPosition, { align: 'center' });
             
-            // Linha separadora
             yPosition += 10;
             pdf.setDrawColor(240, 240, 240);
             pdf.setLineWidth(1);
             pdf.line(margin, yPosition, pageWidth - margin, yPosition);
             
-            // Seção de informações com fundo
             yPosition += 15;
             pdf.setFillColor(249, 249, 249);
             pdf.rect(margin, yPosition - 5, pageWidth - 2*margin, 25, 'F');
-            
-            // Borda lateral verde
             pdf.setFillColor(5, 150, 105);
             pdf.rect(margin, yPosition - 5, 3, 25, 'F');
             
@@ -335,10 +315,7 @@ const Sale = () => {
             pdf.text('Data: ${new Date(sale.created_at).toLocaleString('pt-BR')}', margin + 8, yPosition + 10);
             pdf.text('Nota: #${sale.id.slice(0, 8)}', margin + 8, yPosition + 17);
             
-            // Tabela de produtos
             yPosition += 35;
-            
-            // Cabeçalho da tabela com gradiente simulado
             pdf.setFillColor(5, 150, 105);
             pdf.rect(margin, yPosition, pageWidth - 2*margin, 12, 'F');
             
@@ -351,18 +328,16 @@ const Sale = () => {
             pdf.text('SUBTOTAL', margin + 160, yPosition + 8);
             
             yPosition += 12;
-            
-            // Produtos com alternância de cores
             pdf.setFont(undefined, 'normal');
             pdf.setTextColor(0, 0, 0);
             
-            ${JSON.stringify(sale.items)}.forEach(function(item, index) {
+            var items = ${JSON.stringify(sale.items)};
+            items.forEach(function(item, index) {
               if (yPosition > 250) {
                 pdf.addPage();
                 yPosition = 30;
               }
               
-              // Fundo alternado
               if (index % 2 === 0) {
                 pdf.setFillColor(248, 249, 250);
                 pdf.rect(margin, yPosition, pageWidth - 2*margin, 10, 'F');
@@ -374,7 +349,6 @@ const Sale = () => {
               pdf.text('R$ ' + item.price.toFixed(2), margin + 125, yPosition + 7);
               pdf.text('R$ ' + item.subtotal.toFixed(2), margin + 160, yPosition + 7);
               
-              // Linha sutil de separação
               pdf.setDrawColor(232, 232, 232);
               pdf.setLineWidth(0.2);
               pdf.line(margin, yPosition + 10, pageWidth - margin, yPosition + 10);
@@ -382,22 +356,19 @@ const Sale = () => {
               yPosition += 10;
             });
             
-            // Frete (se houver)
             ${sale.shipping_fee > 0 ? `
-              pdf.setFillColor(240, 248, 244);
-              pdf.rect(margin, yPosition, pageWidth - 2*margin, 10, 'F');
-              pdf.setDrawColor(209, 250, 229);
-              pdf.setLineWidth(1);
-              pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-              
-              pdf.setFontSize(10);
-              pdf.setFont(undefined, 'bold');
-              pdf.text('Frete:', margin + 125, yPosition + 7);
-              pdf.text('R$ ${sale.shipping_fee.toFixed(2)}', margin + 160, yPosition + 7);
-              yPosition += 10;
+            pdf.setFillColor(240, 248, 244);
+            pdf.rect(margin, yPosition, pageWidth - 2*margin, 10, 'F');
+            pdf.setDrawColor(209, 250, 229);
+            pdf.setLineWidth(1);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Frete:', margin + 125, yPosition + 7);
+            pdf.text('R$ ${sale.shipping_fee.toFixed(2)}', margin + 160, yPosition + 7);
+            yPosition += 10;
             ` : ''}
             
-            // Total com destaque
             yPosition += 5;
             pdf.setFillColor(243, 244, 246);
             pdf.rect(margin, yPosition, pageWidth - 2*margin, 15, 'F');
@@ -410,21 +381,190 @@ const Sale = () => {
             pdf.setTextColor(31, 41, 55);
             pdf.text('TOTAL:', margin + 125, yPosition + 10);
             pdf.text('R$ ${sale.total.toFixed(2)}', margin + 160, yPosition + 10);
-          
             
-            const clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
-            const date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
-            const fileName = clientName + '-' + date + '-nota-${sale.id.slice(0, 8)}.pdf';
+            var clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
+            var date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
+            var fileName = clientName + '-' + date + '-nota-${sale.id.slice(0, 8)}.pdf';
             pdf.save(fileName);
             
             alert('PDF baixado com sucesso!');
           }
-          ${logoUrl ? '}' : ''}
+          
+          ${logoUrl ? `
+          var logoImg = new Image();
+          logoImg.crossOrigin = 'anonymous';
+          logoImg.onload = function() {
+            pdf.addImage(logoImg, 'JPEG', pageWidth/2 - 15, yPosition, 30, 30);
+            yPosition += 40;
+            generatePDFContent();
+          };
+          logoImg.onerror = function() {
+            generatePDFContent();
+          };
+          logoImg.src = '${logoUrl}';
+          ` : 'generatePDFContent();'}
         };
         document.head.appendChild(script);
       }
-    `;
+  `;
 
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Nota de Venda</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto;
+            background-color: #ffffff;
+            color: #333;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+          }
+          .logo { 
+            max-width: 120px; 
+            max-height: 120px; 
+            margin: 0 auto 15px; 
+            display: block;
+            border-radius: 8px;
+          }
+          .shop-name { 
+            color: #059669; 
+            text-align: center; 
+            font-size: 1.8em; 
+            font-weight: bold; 
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+          }
+          h1 { 
+            color: #059669; 
+            text-align: center; 
+            font-size: 1.3em; 
+            margin: 10px 0 20px 0;
+            font-weight: 600;
+          }
+          .info { 
+            margin: 25px 0; 
+            color: #555;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #059669;
+          }
+          .info p {
+            margin: 5px 0;
+            font-size: 14px;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 25px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          th { 
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white; 
+            padding: 15px 12px; 
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+            text-align: right;
+          }
+          td {
+            padding: 12px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 14px;
+          }
+          tr:nth-child(even) {
+            background-color: #f8f9fa;
+          }
+          tr:hover {
+            background-color: #f0f8f4;
+          }
+          td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+            text-align: right;
+          }
+          .shipping-row {
+            background-color: #f0f8f4 !important;
+            font-weight: 500;
+            border-top: 2px solid #d1fae5;
+          }
+          .total-row { 
+            font-weight: bold; 
+            font-size: 1.1em; 
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+            border-top: 3px solid #059669;
+          }
+          .total-row td {
+            padding: 18px 12px;
+            color: #1f2937;
+          }
+          .download-btn {
+            margin-top: 30px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          }
+          .download-btn:hover {
+            background: linear-gradient(135deg, #047857, #065f46);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+          }
+          @media print {
+            .download-btn { display: none; }
+            body { box-shadow: none; }
+            table { box-shadow: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo" />` : ''}
+          <div class="shop-name">${shopName || 'Chapada Orgânica'}</div>
+        </div>
+        <h1>Nota de Venda</h1>
+        <div class="info">
+          <p><strong>Cliente:</strong> ${sale.customer_name}</p>
+          <p><strong>Data:</strong> ${new Date(sale.created_at).toLocaleString("pt-BR")}</p>
+          <p><strong>Nota:</strong> #${sale.id.slice(0, 8)}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th style="text-align: center;">Quantidade</th>
+              <th style="text-align: right;">Preço Unit.</th>
+              <th style="text-align: right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+            ${sale.shipping_fee > 0 ? `
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
