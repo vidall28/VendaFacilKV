@@ -249,7 +249,9 @@ const Sale = () => {
     pdf.text(`R$ ${sale.total.toFixed(2)}`, margin + 150, yPosition);
     
     // Download do PDF
-    const fileName = `nota-venda-${sale.id.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    const clientName = sale.customer_name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+    const date = new Date(sale.created_at).toISOString().slice(0, 10);
+    const fileName = `${clientName}-${date}-nota-${sale.id.slice(0, 8)}.pdf`;
     pdf.save(fileName);
     
     toast.success('PDF baixado com sucesso!');
@@ -352,7 +354,9 @@ const Sale = () => {
           pdf.text('TOTAL:', margin + 110, yPosition);
           pdf.text('R$ ${sale.total.toFixed(2)}', margin + 150, yPosition);
           
-          const fileName = 'nota-venda-${sale.id.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.pdf';
+          const clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
+          const date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
+          const fileName = clientName + '-' + date + '-nota-${sale.id.slice(0, 8)}.pdf';
           pdf.save(fileName);
           
           alert('PDF baixado com sucesso!');
@@ -367,39 +371,145 @@ const Sale = () => {
         <head>
           <title>Nota de Venda</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .logo { max-width: 150px; max-height: 150px; margin: 0 auto 10px; display: block; }
-            .shop-name { color: #059669; text-align: center; font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
-            h1 { color: #059669; text-align: center; font-size: 1.2em; margin-top: 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background-color: #059669; color: white; padding: 12px; text-align: left; }
-            .total-row { font-weight: bold; font-size: 1.2em; background-color: #f3f4f6; }
-            .info { margin: 20px 0; color: #6b7280; }
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 20px; 
+              max-width: 800px; 
+              margin: 0 auto;
+              background-color: #ffffff;
+              color: #333;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px;
+              border-bottom: 2px solid #f0f0f0;
+              padding-bottom: 20px;
+            }
+            .logo { 
+              max-width: 120px; 
+              max-height: 120px; 
+              margin: 0 auto 15px; 
+              display: block;
+              border-radius: 8px;
+            }
+            .shop-name { 
+              color: #059669; 
+              text-align: center; 
+              font-size: 1.8em; 
+              font-weight: bold; 
+              margin-bottom: 8px;
+              letter-spacing: 0.5px;
+            }
+            h1 { 
+              color: #059669; 
+              text-align: center; 
+              font-size: 1.3em; 
+              margin: 10px 0 20px 0;
+              font-weight: 600;
+            }
+            .info { 
+              margin: 25px 0; 
+              color: #555;
+              background-color: #f9f9f9;
+              padding: 15px;
+              border-radius: 8px;
+              border-left: 4px solid #059669;
+            }
+            .info p {
+              margin: 5px 0;
+              font-size: 14px;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-top: 25px;
+              background-color: #fff;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+              border-radius: 8px;
+              overflow: hidden;
+            }
+            th { 
+              background: linear-gradient(135deg, #059669, #047857);
+              color: white; 
+              padding: 15px 12px; 
+              text-align: left;
+              font-weight: 600;
+              font-size: 13px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+              text-align: right;
+            }
+            td {
+              padding: 12px;
+              border-bottom: 1px solid #e8e8e8;
+              font-size: 14px;
+            }
+            tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            tr:hover {
+              background-color: #f0f8f4;
+            }
+            td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+              text-align: right;
+            }
+            .shipping-row {
+              background-color: #f0f8f4 !important;
+              font-weight: 500;
+              border-top: 2px solid #d1fae5;
+            }
+            .total-row { 
+              font-weight: bold; 
+              font-size: 1.1em; 
+              background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+              border-top: 3px solid #059669;
+            }
+            .total-row td {
+              padding: 18px 12px;
+              color: #1f2937;
+            }
             .download-btn {
-              margin-top: 20px;
-              padding: 12px 24px;
-              background-color: #059669;
+              margin-top: 30px;
+              padding: 14px 28px;
+              background: linear-gradient(135deg, #059669, #047857);
               color: white;
               border: none;
-              border-radius: 6px;
+              border-radius: 8px;
               cursor: pointer;
               font-size: 16px;
-              font-weight: bold;
-              transition: background-color 0.3s;
+              font-weight: 600;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
             }
             .download-btn:hover {
-              background-color: #047857;
+              background: linear-gradient(135deg, #047857, #065f46);
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
             }
             @media print {
               .download-btn { display: none; }
+              body { box-shadow: none; }
+              table { box-shadow: none; }
             }
           </style>
         </head>
         <body>
           <div class="header">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo" />` : ''}
-            <div class="shop-name">${shopName || 'Minha Loja'}</div>
+            <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="45" fill="#059669" stroke="#047857" stroke-width="2"/>
+              <path d="M30 60 Q50 40 70 60 Q50 80 30 60" fill="#10b981"/>
+              <circle cx="40" cy="55" r="3" fill="#34d399"/>
+              <circle cx="60" cy="55" r="3" fill="#34d399"/>
+              <path d="M35 45 Q50 30 65 45" stroke="#34d399" stroke-width="2" fill="none"/>
+              <text x="50" y="25" text-anchor="middle" fill="white" font-size="8" font-weight="bold">ORGÂNICO</text>
+            </svg>
+            <div class="shop-name">Chapada Orgânica</div>
           </div>
           <h1>Nota de Venda</h1>
           <div class="info">
