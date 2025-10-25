@@ -14,13 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price: number
+          unit: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          unit: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          shipping_price_per_kg: number
+          shop_name: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          logo_url?: string | null
+          shipping_price_per_kg?: number
+          shop_name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          shipping_price_per_kg?: number
+          shop_name?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          created_at: string
+          customer_name: string
+          id: string
+          items: Json
+          shipping_fee: number
+          shipping_weight: number
+          total: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          items?: Json
+          shipping_fee?: number
+          shipping_weight?: number
+          total: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          items?: Json
+          shipping_fee?: number
+          shipping_weight?: number
+          total?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_email_by_shop_name: {
+        Args: { shop_name_input: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
