@@ -42,7 +42,7 @@ const Sale = () => {
   }, [user]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
+    if (searchTerm.trim() && !selectedProduct) {
       const filtered = products.filter((p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -52,7 +52,7 @@ const Sale = () => {
       setFilteredProducts([]);
       setShowSuggestions(false);
     }
-  }, [searchTerm, products]);
+  }, [searchTerm, products, selectedProduct]);
 
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -305,9 +305,12 @@ const Sale = () => {
                 <Input
                   id="search"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setSelectedProduct(null);
+                  }}
                   placeholder="Digite o nome do produto..."
-                  onFocus={() => searchTerm && setShowSuggestions(true)}
+                  onFocus={() => searchTerm && !selectedProduct && setShowSuggestions(true)}
                 />
                 {showSuggestions && filteredProducts.length > 0 && (
                   <Card className="absolute z-10 mt-1 w-full shadow-lg">
