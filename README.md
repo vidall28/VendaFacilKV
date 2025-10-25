@@ -1,22 +1,18 @@
-# Welcome to your Lovable project
+# VendaFacilKV - Sistema de Vendas
 
-## Project info
+## Sobre o Projeto
 
-**URL**: https://lovable.dev/projects/9405c1e9-429f-4aae-a08f-ca65062c7bec
+Sistema completo de vendas desenvolvido para pequenas lojas e estabelecimentos comerciais. O VendaFacilKV permite cadastrar produtos, emitir notas fiscais e acompanhar o histórico de vendas de forma rápida e eficiente.
 
-## How can I edit this code?
+## Funcionalidades
 
-There are several ways of editing your application.
+- 📦 Cadastro de produtos
+- 💰 Emissão de notas fiscais
+- 📊 Histórico de vendas
+- 🔍 Busca e filtros avançados
+- 📱 Interface responsiva
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/9405c1e9-429f-4aae-a08f-ca65062c7bec) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Como usar
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -60,14 +56,19 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Como fazer deploy do projeto?
 
-Simply open [Lovable](https://lovable.dev/projects/9405c1e9-429f-4aae-a08f-ca65062c7bec) and click on Share -> Publish.
+Este projeto pode ser implantado em qualquer serviço de hospedagem que suporte aplicações React/Vite, como:
 
-## Can I connect a custom domain to my Lovable project?
+- Vercel
+- Netlify
+- GitHub Pages
+- Heroku
 
-Yes, you can!
+Para fazer o build de produção:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```sh
+npm run build
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Os arquivos de produção serão gerados na pasta `dist/`.
