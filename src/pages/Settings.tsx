@@ -141,7 +141,7 @@ const Settings = () => {
                 <div className="flex justify-center">
                   <div className="relative w-48 h-48 border-2 border-muted rounded-lg overflow-hidden bg-muted/50 flex items-center justify-center">
                     <img
-                      src={previewUrl}
+                      src={`${previewUrl}?t=${Date.now()}`}
                       alt="Logo da loja"
                       className="max-w-full max-h-full object-contain"
                     />
