@@ -356,19 +356,6 @@ const Sale = () => {
               yPosition += 10;
             });
             
-            ${sale.shipping_fee > 0 ? `
-            pdf.setFillColor(240, 248, 244);
-            pdf.rect(margin, yPosition, pageWidth - 2*margin, 10, 'F');
-            pdf.setDrawColor(209, 250, 229);
-            pdf.setLineWidth(1);
-            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-            pdf.setFontSize(10);
-            pdf.setFont(undefined, 'bold');
-            pdf.text('Frete:', margin + 100, yPosition + 7);
-            pdf.text('R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 7);
-            yPosition += 10;
-            ` : ''}
-            
             yPosition += 5;
             pdf.setFillColor(243, 244, 246);
             pdf.rect(margin, yPosition, pageWidth - 2*margin, 15, 'F');
@@ -381,6 +368,20 @@ const Sale = () => {
             pdf.setTextColor(31, 41, 55);
             pdf.text('TOTAL:', margin + 100, yPosition + 10);
             pdf.text('R$ ${sale.total.toFixed(2)}', margin + 140, yPosition + 10);
+            
+            ${sale.shipping_fee > 0 ? `
+            yPosition += 20;
+            pdf.setFillColor(255, 251, 235);
+            pdf.rect(margin, yPosition, pageWidth - 2*margin, 12, 'F');
+            pdf.setDrawColor(251, 191, 36);
+            pdf.setLineWidth(1.5);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.setTextColor(146, 64, 14);
+            pdf.text('Frete (adicional):', margin + 80, yPosition + 8);
+            pdf.text('+ R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 8);
+            ` : ''}
             
             var clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
             var date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
@@ -498,11 +499,6 @@ const Sale = () => {
           td:nth-child(2), td:nth-child(3), td:nth-child(4) {
             text-align: right;
           }
-          .shipping-row {
-            background-color: #f0f8f4 !important;
-            font-weight: 500;
-            border-top: 2px solid #d1fae5;
-          }
           .total-row { 
             font-weight: bold; 
             font-size: 1.1em; 
@@ -512,6 +508,29 @@ const Sale = () => {
           .total-row td {
             padding: 18px 12px;
             color: #1f2937;
+          }
+          .shipping-info {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+          }
+          .shipping-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .shipping-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #92400e;
           }
           .download-btn {
             margin-top: 30px;
@@ -564,18 +583,18 @@ const Sale = () => {
           </thead>
           <tbody>
             ${itemsHtml}
-            ${sale.shipping_fee > 0 ? `
-              <tr class="shipping-row">
-                <td colspan="3" style="padding: 12px; text-align: right; font-weight: 500;">Frete:</td>
-                <td style="padding: 12px; text-align: right; font-weight: 500;">R$ ${sale.shipping_fee.toFixed(2)}</td>
-              </tr>
-            ` : ''}
             <tr class="total-row">
               <td colspan="3" style="padding: 12px; text-align: right;">TOTAL:</td>
               <td style="padding: 12px; text-align: right;">R$ ${sale.total.toFixed(2)}</td>
             </tr>
           </tbody>
         </table>
+        ${sale.shipping_fee > 0 ? `
+          <div class="shipping-info">
+            <span class="shipping-label">Frete (adicional):</span>
+            <span class="shipping-value">+ R$ ${sale.shipping_fee.toFixed(2)}</span>
+          </div>
+        ` : ''}
         <button onclick="downloadPDF()" class="download-btn">
           📄 Baixar PDF
         </button>

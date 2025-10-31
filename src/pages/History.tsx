@@ -199,6 +199,20 @@ const History = () => {
             pdf.text('TOTAL:', margin + 100, yPosition + 10);
             pdf.text('R$ ${sale.total.toFixed(2)}', margin + 140, yPosition + 10);
             
+            ${sale.shipping_fee > 0 ? `
+            yPosition += 20;
+            pdf.setFillColor(255, 251, 235);
+            pdf.rect(margin, yPosition, pageWidth - 2*margin, 12, 'F');
+            pdf.setDrawColor(251, 191, 36);
+            pdf.setLineWidth(1.5);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.setTextColor(146, 64, 14);
+            pdf.text('Frete (adicional):', margin + 80, yPosition + 8);
+            pdf.text('+ R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 8);
+            ` : ''}
+            
             var clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
             var date = '${new Date(sale.created_at).toISOString().slice(0, 10)}';
             var fileName = clientName + '-' + date + '-nota-${sale.id.slice(0, 8)}.pdf';
@@ -325,6 +339,29 @@ const History = () => {
               padding: 18px 12px;
               color: #1f2937;
             }
+            .shipping-info {
+              margin-top: 20px;
+              padding: 15px 20px;
+              background: linear-gradient(135deg, #fffbeb, #fef3c7);
+              border: 2px solid #fbbf24;
+              border-radius: 8px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+            }
+            .shipping-label {
+              font-size: 14px;
+              font-weight: 600;
+              color: #92400e;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .shipping-value {
+              font-size: 16px;
+              font-weight: bold;
+              color: #92400e;
+            }
             .download-btn {
               margin-top: 30px;
               padding: 14px 28px;
@@ -382,6 +419,12 @@ const History = () => {
               </tr>
             </tbody>
           </table>
+          ${sale.shipping_fee > 0 ? `
+            <div class="shipping-info">
+              <span class="shipping-label">Frete (adicional):</span>
+              <span class="shipping-value">+ R$ ${sale.shipping_fee.toFixed(2)}</span>
+            </div>
+          ` : ''}
           <button onclick="downloadPDF()" class="download-btn">
             📄 Baixar PDF
           </button>
