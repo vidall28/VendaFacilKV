@@ -120,7 +120,7 @@ const Sale = () => {
   };
 
   const calculateTotal = () => {
-    return calculateSubtotal() + calculateShippingFee();
+    return calculateSubtotal(); // Frete não incluído no total (sempre à parte)
   };
 
   const handleFinishSale = async () => {
@@ -371,14 +371,14 @@ const Sale = () => {
             
             ${sale.shipping_fee > 0 ? `
             yPosition += 20;
-            pdf.setFillColor(255, 251, 235);
+            pdf.setFillColor(240, 253, 244);
             pdf.rect(margin, yPosition, pageWidth - 2*margin, 12, 'F');
-            pdf.setDrawColor(251, 191, 36);
+            pdf.setDrawColor(34, 197, 94);
             pdf.setLineWidth(1.5);
             pdf.line(margin, yPosition, pageWidth - margin, yPosition);
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'bold');
-            pdf.setTextColor(146, 64, 14);
+            pdf.setTextColor(22, 101, 52);
             pdf.text('Frete (adicional):', margin + 80, yPosition + 8);
             pdf.text('+ R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 8);
             ` : ''}
@@ -512,25 +512,25 @@ const Sale = () => {
           .shipping-info {
             margin-top: 20px;
             padding: 15px 20px;
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-            border: 2px solid #fbbf24;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #22c55e;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
           }
           .shipping-label {
             font-size: 14px;
             font-weight: 600;
-            color: #92400e;
+            color: #166534;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
           .shipping-value {
             font-size: 16px;
             font-weight: bold;
-            color: #92400e;
+            color: #166534;
           }
           .download-btn {
             margin-top: 30px;
