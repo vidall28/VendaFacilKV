@@ -37,6 +37,7 @@ const Sale = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [shippingWeight, setShippingWeight] = useState("");
+  const [noFreight, setNoFreight] = useState(false); // Checkbox para não cobrar frete
 
   useEffect(() => {
     if (user) {
@@ -57,11 +58,13 @@ const Sale = () => {
     }
   }, [searchTerm, products, selectedProduct]);
 
-  // Atualizar peso do frete automaticamente quando itens mudarem
+  // Atualizar peso do frete automaticamente quando itens mudarem (se não estiver marcado "sem frete")
   useEffect(() => {
-    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
-    setShippingWeight(totalWeight.toFixed(2));
-  }, [items]);
+    if (!noFreight) {
+      const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+      setShippingWeight(totalWeight.toFixed(2));
+    }
+  }, [items, noFreight]);
 
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -97,8 +100,12 @@ const Sale = () => {
       return;
     }
 
-    // Para produtos em UN, validar se o peso é válido (permite 0 para não cobrar frete)
-    if (selectedProduct.unit === "un" && itemWeight.trim() !== "") {
+    // Para produtos em UN, validar peso (obrigatório, mas aceita 0)
+    if (selectedProduct.unit === "un") {
+      if (!itemWeight || itemWeight.trim() === "") {
+        toast.error("Informe o peso do item (use 0 para não cobrar frete)");
+        return;
+      }
       const weight = parseFloat(itemWeight);
       if (isNaN(weight) || weight < 0) {
         toast.error("Peso deve ser um número válido (0 ou maior)");
@@ -665,34 +672,56 @@ const Sale = () => {
                   placeholder="Digite o nome do cliente..."
                 />
               </div>
-              <div>
-                <Label htmlFor="shippingWeight">
-                  Peso para Frete (kg)
-                  {items.length > 0 && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (calculado automaticamente)
-                    </span>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="noFreight"
+                    checked={noFreight}
+                    onChange={(e) => {
+                      setNoFreight(e.target.checked);
+                      if (e.target.checked) {
+                        setShippingWeight("0");
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <Label htmlFor="noFreight" className="cursor-pointer font-normal">
+                    Não cobrar frete nesta venda
+                  </Label>
+                </div>
+                
+                <div>
+                  <Label htmlFor="shippingWeight">
+                    Peso para Frete (kg)
+                    {items.length > 0 && !noFreight && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        (calculado automaticamente)
+                      </span>
+                    )}
+                  </Label>
+                  <Input
+                    id="shippingWeight"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={shippingWeight}
+                    onChange={(e) => setShippingWeight(e.target.value)}
+                    placeholder="0.00"
+                    disabled={noFreight}
+                    className={noFreight ? "bg-muted cursor-not-allowed" : ""}
+                  />
+                  {parseFloat(shippingWeight) > 0 && !noFreight && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
+                    </p>
                   )}
-                </Label>
-                <Input
-                  id="shippingWeight"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={shippingWeight}
-                  onChange={(e) => setShippingWeight(e.target.value)}
-                  placeholder="0.00"
-                />
-                {parseFloat(shippingWeight) > 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
-                  </p>
-                )}
-                {items.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Você pode ajustar o peso manualmente se necessário
-                  </p>
-                )}
+                  {items.length > 0 && !noFreight && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Você pode ajustar o peso manualmente se necessário
+                    </p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
