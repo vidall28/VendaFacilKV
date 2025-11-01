@@ -21,6 +21,7 @@ interface SaleItem {
   product: Product;
   quantity: number;
   subtotal: number;
+  weight: number; // Peso em kg (para produtos em kg = quantity, para un = peso informado)
 }
 
 const Sale = () => {
@@ -31,6 +32,7 @@ const Sale = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState("");
+  const [itemWeight, setItemWeight] = useState(""); // Peso do item em UN
   const [items, setItems] = useState<SaleItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [customerName, setCustomerName] = useState("");
@@ -54,6 +56,12 @@ const Sale = () => {
       setShowSuggestions(false);
     }
   }, [searchTerm, products, selectedProduct]);
+
+  // Atualizar peso do frete automaticamente quando itens mudarem
+  useEffect(() => {
+    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+    setShippingWeight(totalWeight.toFixed(2));
+  }, [items]);
 
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -89,7 +97,27 @@ const Sale = () => {
       return;
     }
 
+    // Para produtos em UN, validar se o peso foi informado
+    if (selectedProduct.unit === "un" && !itemWeight) {
+      toast.error("Informe o peso total deste item para calcular o frete");
+      return;
+    }
+
+    // Para produtos em UN, validar se o peso é válido
+    if (selectedProduct.unit === "un") {
+      const weight = parseFloat(itemWeight);
+      if (isNaN(weight) || weight <= 0) {
+        toast.error("Peso deve ser maior que zero");
+        return;
+      }
+    }
+
     const subtotal = selectedProduct.price * qty;
+    
+    // Calcular peso: para KG = quantidade, para UN = peso informado
+    const itemWeightValue = selectedProduct.unit === "kg" 
+      ? qty 
+      : parseFloat(itemWeight);
 
     setItems([
       ...items,
@@ -97,12 +125,14 @@ const Sale = () => {
         product: selectedProduct,
         quantity: qty,
         subtotal,
+        weight: itemWeightValue,
       },
     ]);
 
     setSearchTerm("");
     setSelectedProduct(null);
     setQuantity("");
+    setItemWeight("");
     toast.success("Produto adicionado!");
   };
 
@@ -112,6 +142,14 @@ const Sale = () => {
 
   const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + item.subtotal, 0);
+  };
+
+  const calculateTotalWeight = () => {
+    return items.reduce((sum, item) => sum + item.weight, 0);
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal(); // Frete não incluído no total (sempre à parte)
   };
 
   const calculateShippingFee = () => {
@@ -638,7 +676,14 @@ const Sale = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="shippingWeight">Peso da Carga (kg)</Label>
+                <Label htmlFor="shippingWeight">
+                  Peso para Frete (kg)
+                  {items.length > 0 && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (calculado automaticamente)
+                    </span>
+                  )}
+                </Label>
                 <Input
                   id="shippingWeight"
                   type="number"
@@ -650,7 +695,12 @@ const Sale = () => {
                 />
                 {parseFloat(shippingWeight) > 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
+                    💰 Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
+                  </p>
+                )}
+                {items.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ✏️ Você pode ajustar o peso manualmente se necessário
                   </p>
                 )}
               </div>
@@ -695,27 +745,50 @@ const Sale = () => {
               </div>
 
               {selectedProduct && (
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor="quantity">
-                      Quantidade ({selectedProduct.unit})
-                    </Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step={selectedProduct.unit === "kg" ? "0.01" : "1"}
-                      min="0"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      placeholder={selectedProduct.unit === "kg" ? "0.00" : "0"}
-                    />
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <Label htmlFor="quantity">
+                        Quantidade ({selectedProduct.unit})
+                      </Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        step={selectedProduct.unit === "kg" ? "0.01" : "1"}
+                        min="0"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        placeholder={selectedProduct.unit === "kg" ? "0.00" : "0"}
+                      />
+                    </div>
+                    {selectedProduct.unit === "un" && (
+                      <div className="flex-1">
+                        <Label htmlFor="itemWeight">
+                          Peso Total (kg) *
+                        </Label>
+                        <Input
+                          id="itemWeight"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={itemWeight}
+                          onChange={(e) => setItemWeight(e.target.value)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-end">
+                      <Button onClick={handleAddItem} className="bg-primary">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-end">
-                    <Button onClick={handleAddItem} className="bg-primary">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Adicionar
-                    </Button>
-                  </div>
+                  {selectedProduct.unit === "un" && (
+                    <p className="text-sm text-muted-foreground">
+                      💡 Informe o peso total deste item para calcular o frete corretamente
+                    </p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -743,6 +816,9 @@ const Sale = () => {
                           {item.quantity} {item.product.unit} × R${" "}
                           {item.product.price.toFixed(2)}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ⚖️ Peso: {item.weight.toFixed(2)} kg
+                        </p>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="font-bold text-lg">
@@ -764,6 +840,12 @@ const Sale = () => {
                       <span>Subtotal:</span>
                       <span>R$ {calculateSubtotal().toFixed(2)}</span>
                     </div>
+                    {items.length > 0 && (
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <span>⚖️ Peso total dos produtos:</span>
+                        <span>{calculateTotalWeight().toFixed(2)} kg</span>
+                      </div>
+                    )}
                     {parseFloat(shippingWeight) > 0 && (
                       <div className="flex justify-between items-center text-lg">
                         <span>Frete ({shippingWeight} kg):</span>
