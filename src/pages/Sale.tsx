@@ -157,10 +157,6 @@ const Sale = () => {
     return weight * shippingPricePerKg;
   };
 
-  const calculateTotal = () => {
-    return calculateSubtotal(); // Frete não incluído no total (sempre à parte)
-  };
-
   const handleFinishSale = async () => {
     if (items.length === 0) {
       toast.error("Adicione pelo menos um produto");
