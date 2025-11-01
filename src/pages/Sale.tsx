@@ -97,27 +97,21 @@ const Sale = () => {
       return;
     }
 
-    // Para produtos em UN, validar se o peso foi informado
-    if (selectedProduct.unit === "un" && !itemWeight) {
-      toast.error("Informe o peso total deste item para calcular o frete");
-      return;
-    }
-
-    // Para produtos em UN, validar se o peso é válido
-    if (selectedProduct.unit === "un") {
+    // Para produtos em UN, validar se o peso é válido (permite 0 para não cobrar frete)
+    if (selectedProduct.unit === "un" && itemWeight.trim() !== "") {
       const weight = parseFloat(itemWeight);
-      if (isNaN(weight) || weight <= 0) {
-        toast.error("Peso deve ser maior que zero");
+      if (isNaN(weight) || weight < 0) {
+        toast.error("Peso deve ser um número válido (0 ou maior)");
         return;
       }
     }
 
     const subtotal = selectedProduct.price * qty;
     
-    // Calcular peso: para KG = quantidade, para UN = peso informado
+    // Calcular peso: para KG = quantidade, para UN = peso informado (0 se vazio)
     const itemWeightValue = selectedProduct.unit === "kg" 
       ? qty 
-      : parseFloat(itemWeight);
+      : (itemWeight.trim() === "" ? 0 : parseFloat(itemWeight));
 
     setItems([
       ...items,
@@ -784,7 +778,7 @@ const Sale = () => {
                         </div>
                         <div>
                           <Label htmlFor="itemWeight">
-                            Peso Total (kg) *
+                            Peso Total (kg)
                           </Label>
                           <Input
                             id="itemWeight"
@@ -798,7 +792,7 @@ const Sale = () => {
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Informe o peso total deste item para calcular o frete corretamente
+                        Informe o peso para calcular o frete (deixe 0 ou vazio para não cobrar)
                       </p>
                       <Button onClick={handleAddItem} className="w-full bg-primary">
                         <Plus className="mr-2 h-4 w-4" />
