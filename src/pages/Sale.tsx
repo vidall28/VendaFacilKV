@@ -691,12 +691,12 @@ const Sale = () => {
                 />
                 {parseFloat(shippingWeight) > 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    💰 Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
+                    Frete: R$ {calculateShippingFee().toFixed(2)} ({shippingWeight} kg × R$ {shippingPricePerKg.toFixed(2)}/kg)
                   </p>
                 )}
                 {items.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    ✏️ Você pode ajustar o peso manualmente se necessário
+                    Você pode ajustar o peso manualmente se necessário
                   </p>
                 )}
               </div>
@@ -798,7 +798,7 @@ const Sale = () => {
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        💡 Informe o peso total deste item para calcular o frete corretamente
+                        Informe o peso total deste item para calcular o frete corretamente
                       </p>
                       <Button onClick={handleAddItem} className="w-full bg-primary">
                         <Plus className="mr-2 h-4 w-4" />
@@ -834,7 +834,7 @@ const Sale = () => {
                           {item.product.price.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          ⚖️ Peso: {item.weight.toFixed(2)} kg
+                          Peso: {item.weight.toFixed(2)} kg
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
@@ -859,7 +859,7 @@ const Sale = () => {
                     </div>
                     {items.length > 0 && (
                       <div className="flex justify-between items-center text-sm text-muted-foreground">
-                        <span>⚖️ Peso total dos produtos:</span>
+                        <span>Peso total dos produtos:</span>
                         <span>{calculateTotalWeight().toFixed(2)} kg</span>
                       </div>
                     )}
