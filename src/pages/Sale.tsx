@@ -742,48 +742,69 @@ const Sale = () => {
 
               {selectedProduct && (
                 <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <Label htmlFor="quantity">
-                        Quantidade ({selectedProduct.unit})
-                      </Label>
-                      <Input
-                        id="quantity"
-                        type="number"
-                        step={selectedProduct.unit === "kg" ? "0.01" : "1"}
-                        min="0"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        placeholder={selectedProduct.unit === "kg" ? "0.00" : "0"}
-                      />
-                    </div>
-                    {selectedProduct.unit === "un" && (
-                      <div className="flex-1">
-                        <Label htmlFor="itemWeight">
-                          Peso Total (kg) *
+                  {selectedProduct.unit === "kg" ? (
+                    // Layout para produtos em KG
+                    <>
+                      <div>
+                        <Label htmlFor="quantity">
+                          Quantidade ({selectedProduct.unit})
                         </Label>
                         <Input
-                          id="itemWeight"
+                          id="quantity"
                           type="number"
                           step="0.01"
                           min="0"
-                          value={itemWeight}
-                          onChange={(e) => setItemWeight(e.target.value)}
+                          value={quantity}
+                          onChange={(e) => setQuantity(e.target.value)}
                           placeholder="0.00"
                         />
                       </div>
-                    )}
-                    <div className="flex items-end">
-                      <Button onClick={handleAddItem} className="bg-primary">
+                      <Button onClick={handleAddItem} className="w-full bg-primary">
                         <Plus className="mr-2 h-4 w-4" />
-                        Adicionar
+                        Adicionar Produto
                       </Button>
-                    </div>
-                  </div>
-                  {selectedProduct.unit === "un" && (
-                    <p className="text-sm text-muted-foreground">
-                      💡 Informe o peso total deste item para calcular o frete corretamente
-                    </p>
+                    </>
+                  ) : (
+                    // Layout para produtos em UN
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="quantity">
+                            Quantidade ({selectedProduct.unit})
+                          </Label>
+                          <Input
+                            id="quantity"
+                            type="number"
+                            step="1"
+                            min="0"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="itemWeight">
+                            Peso Total (kg) *
+                          </Label>
+                          <Input
+                            id="itemWeight"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={itemWeight}
+                            onChange={(e) => setItemWeight(e.target.value)}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        💡 Informe o peso total deste item para calcular o frete corretamente
+                      </p>
+                      <Button onClick={handleAddItem} className="w-full bg-primary">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar Produto
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
