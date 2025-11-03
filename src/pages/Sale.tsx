@@ -391,7 +391,15 @@ const Sale = () => {
               yPosition += 10;
             });
             
+            // Peso total da nota
             yPosition += 5;
+            pdf.setFontSize(9);
+            pdf.setFont(undefined, 'normal');
+            pdf.setTextColor(100, 100, 100);
+            pdf.text('Peso total da nota: ${sale.shipping_weight || 0} kg', margin + 5, yPosition + 5);
+            
+            // Total da nota
+            yPosition += 8;
             pdf.setFillColor(243, 244, 246);
             pdf.rect(margin, yPosition, pageWidth - 2*margin, 15, 'F');
             pdf.setDrawColor(5, 150, 105);
@@ -405,17 +413,25 @@ const Sale = () => {
             pdf.text('R$ ${sale.total.toFixed(2)}', margin + 140, yPosition + 10);
             
             ${sale.shipping_fee > 0 ? `
-            yPosition += 20;
+            // Espaço maior antes do frete
+            yPosition += 30;
+            
+            // Box do frete mais destacado
             pdf.setFillColor(240, 253, 244);
-            pdf.rect(margin, yPosition, pageWidth - 2*margin, 12, 'F');
+            pdf.rect(margin, yPosition, pageWidth - 2*margin, 18, 'F');
             pdf.setDrawColor(34, 197, 94);
-            pdf.setLineWidth(1.5);
+            pdf.setLineWidth(2);
             pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-            pdf.setFontSize(10);
+            pdf.line(margin, yPosition + 18, pageWidth - margin, yPosition + 18);
+            
+            // Texto do frete maior e mais destacado
+            pdf.setFontSize(11);
             pdf.setFont(undefined, 'bold');
             pdf.setTextColor(22, 101, 52);
-            pdf.text('Frete (adicional):', margin + 80, yPosition + 8);
-            pdf.text('+ R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 8);
+            pdf.text('Peso do frete: ${sale.shipping_weight || 0} kg', margin + 10, yPosition + 7);
+            pdf.setFontSize(12);
+            pdf.text('FRETE (adicional):', margin + 10, yPosition + 14);
+            pdf.text('+ R$ ${sale.shipping_fee.toFixed(2)}', margin + 140, yPosition + 14);
             ` : ''}
             
             var clientName = '${sale.customer_name}'.replace(/[^a-zA-Z0-9\\s]/g, '').replace(/\\s+/g, '-');
