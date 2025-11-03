@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Trash2, Download } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,8 @@ interface SaleItem {
 const Sale = () => {
   const { user, shopName, logoUrl, shippingPricePerKg } = useAuth();
   const navigate = useNavigate();
+  const { id: saleId } = useParams<{ id: string }>(); // ID da nota para edição
+  const isEditMode = !!saleId; // Modo de edição se tiver ID na URL
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,8 +44,11 @@ const Sale = () => {
   useEffect(() => {
     if (user) {
       loadProducts();
+      if (isEditMode && saleId) {
+        loadSaleData(saleId);
+      }
     }
-  }, [user]);
+  }, [user, isEditMode, saleId]);
 
   useEffect(() => {
     if (searchTerm.trim() && !selectedProduct) {
@@ -79,6 +84,41 @@ const Sale = () => {
     }
 
     setProducts((data || []) as Product[]);
+  };
+
+  const loadSaleData = async (id: string) => {
+    const { data, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      toast.error("Erro ao carregar dados da venda");
+      navigate("/history");
+      return;
+    }
+
+    // Carregar dados da nota
+    setCustomerName(data.customer_name);
+    setShippingWeight(data.shipping_weight?.toString() || "0");
+    setNoFreight(data.shipping_fee === 0);
+
+    // Carregar itens com peso
+    const loadedItems: SaleItem[] = data.items.map((item: any) => ({
+      product: {
+        id: item.product_id,
+        name: item.product_name,
+        price: item.price,
+        unit: item.unit,
+      },
+      quantity: item.quantity,
+      subtotal: item.subtotal,
+      weight: item.unit === "kg" ? item.quantity : (data.shipping_weight || 0) / data.items.length, // Estimativa de peso
+    }));
+
+    setItems(loadedItems);
+    toast.success("Nota carregada para edição");
   };
 
   const handleSelectProduct = (product: Product) => {
@@ -185,21 +225,40 @@ const Sale = () => {
       })),
     };
 
-    const { data, error } = await supabase
-      .from("sales")
-      .insert([saleData])
-      .select()
-      .single();
+    if (isEditMode && saleId) {
+      // Modo de edição: atualizar nota existente
+      const { data, error } = await supabase
+        .from("sales")
+        .update(saleData)
+        .eq("id", saleId)
+        .select()
+        .single();
 
-    if (error) {
-      toast.error("Erro ao finalizar venda");
-      return;
+      if (error) {
+        toast.error("Erro ao atualizar venda");
+        return;
+      }
+
+      toast.success("Venda atualizada com sucesso!");
+      navigate("/history");
+    } else {
+      // Modo de criação: criar nova nota
+      const { data, error } = await supabase
+        .from("sales")
+        .insert([saleData])
+        .select()
+        .single();
+
+      if (error) {
+        toast.error("Erro ao finalizar venda");
+        return;
+      }
+
+      toast.success("Venda finalizada!");
+      // Restaura o fluxo original: abre nova página com layout antigo mas com botão PDF
+      openPDFPage(data);
+      navigate("/history");
     }
-
-    toast.success("Venda finalizada!");
-    // Restaura o fluxo original: abre nova página com layout antigo mas com botão PDF
-    openPDFPage(data);
-    navigate("/historico");
   };
 
   const downloadPDF = (sale: any) => {
@@ -669,7 +728,9 @@ const Sale = () => {
               Voltar
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-foreground">Nova Venda</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isEditMode ? "Editar Venda" : "Nova Venda"}
+          </h1>
           <div className="w-20" />
         </div>
 
@@ -922,7 +983,7 @@ const Sale = () => {
                     size="lg"
                   >
                     <Download className="mr-2 h-5 w-5" />
-                    Finalizar Venda
+                    {isEditMode ? "Salvar Alterações" : "Finalizar Venda"}
                   </Button>
                 </div>
               )}

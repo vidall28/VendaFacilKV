@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Download, ShoppingCart, TrendingUp, DollarSign, Search } from "lucide-react";
+import { ArrowLeft, Download, ShoppingCart, TrendingUp, DollarSign, Search, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -545,14 +545,25 @@ const History = () => {
                       {new Date(sale.created_at).toLocaleString("pt-BR")} • Nota #{sale.id.slice(0, 8)}
                     </p>
                   </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => downloadPDF(sale)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      PDF
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link to={`/sale/edit/${sale.id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadPDF(sale)}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        PDF
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
