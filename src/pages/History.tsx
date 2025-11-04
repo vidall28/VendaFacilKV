@@ -88,6 +88,23 @@ const History = () => {
     }
 
     setFilteredSales(filtered);
+
+    // Calcular estatísticas baseadas nas vendas filtradas
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const todayTotal = filtered
+      .filter((sale) => new Date(sale.created_at) >= today)
+      .reduce((sum, sale) => sum + sale.total, 0);
+
+    const monthTotal = filtered
+      .filter((sale) => new Date(sale.created_at) >= firstDayOfMonth)
+      .reduce((sum, sale) => sum + sale.total, 0);
+
+    setTotalSales(filtered.length);
+    setTodaySales(todayTotal);
+    setMonthSales(monthTotal);
   }, [searchTerm, startDate, endDate, sales]);
 
   const loadSales = async () => {
@@ -631,16 +648,16 @@ const History = () => {
             filteredSales.map((sale) => (
               <Card key={sale.id} className="shadow-soft hover:shadow-medium transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {sale.customer_name}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {new Date(sale.created_at).toLocaleString("pt-BR")} • Nota #{sale.id.slice(0, 8)}
-                    </p>
-                  </div>
-                    <div className="flex gap-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg">
+                        {sale.customer_name}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {new Date(sale.created_at).toLocaleString("pt-BR")} • Nota #{sale.id.slice(0, 8)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
                       <Link to={`/sale/edit/${sale.id}`}>
                         <Button
                           variant="outline"
@@ -662,10 +679,9 @@ const History = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteClick(sale)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
