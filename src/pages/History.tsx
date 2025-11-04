@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Download, ShoppingCart, TrendingUp, DollarSign, Search, Edit } from "lucide-react";
+import { ArrowLeft, Download, ShoppingCart, TrendingUp, DollarSign, Search, Edit, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Sale {
   id: string;
@@ -21,9 +31,13 @@ const History = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [filteredSales, setFilteredSales] = useState<Sale[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [totalSales, setTotalSales] = useState(0);
   const [todaySales, setTodaySales] = useState(0);
   const [monthSales, setMonthSales] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -32,26 +46,49 @@ const History = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredSales(sales);
-      return;
+    let filtered = sales;
+
+    // Filtro por texto
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((sale) => {
+        const saleId = sale.id.slice(0, 8).toLowerCase();
+        const customerName = sale.customer_name.toLowerCase();
+        const saleDate = new Date(sale.created_at).toLocaleDateString("pt-BR");
+        
+        return (
+          saleId.includes(term) ||
+          customerName.includes(term) ||
+          saleDate.includes(term)
+        );
+      });
     }
 
-    const term = searchTerm.toLowerCase();
-    const filtered = sales.filter((sale) => {
-      const saleId = sale.id.slice(0, 8).toLowerCase();
-      const customerName = sale.customer_name.toLowerCase();
-      const saleDate = new Date(sale.created_at).toLocaleDateString("pt-BR");
-      
-      return (
-        saleId.includes(term) ||
-        customerName.includes(term) ||
-        saleDate.includes(term)
-      );
-    });
-    
+    // Filtro por data
+    if (startDate || endDate) {
+      filtered = filtered.filter((sale) => {
+        const saleDate = new Date(sale.created_at);
+        saleDate.setHours(0, 0, 0, 0); // Zera horas para comparar apenas data
+        
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999); // Inclui o dia todo
+          return saleDate >= start && saleDate <= end;
+        } else if (startDate) {
+          const start = new Date(startDate);
+          return saleDate >= start;
+        } else if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          return saleDate <= end;
+        }
+        return true;
+      });
+    }
+
     setFilteredSales(filtered);
-  }, [searchTerm, sales]);
+  }, [searchTerm, startDate, endDate, sales]);
 
   const loadSales = async () => {
     const { data, error } = await supabase
@@ -85,6 +122,30 @@ const History = () => {
     setTotalSales(salesData.length);
     setTodaySales(todayTotal);
     setMonthSales(monthTotal);
+  };
+
+  const handleDeleteClick = (sale: Sale) => {
+    setSaleToDelete(sale);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!saleToDelete) return;
+
+    const { error } = await supabase
+      .from("sales")
+      .delete()
+      .eq("id", saleToDelete.id);
+
+    if (error) {
+      toast.error("Erro ao excluir venda");
+      return;
+    }
+
+    toast.success("Venda excluída com sucesso!");
+    setDeleteDialogOpen(false);
+    setSaleToDelete(null);
+    loadSales(); // Recarrega a lista
   };
 
   const downloadPDF = (sale: Sale) => {
@@ -511,7 +572,7 @@ const History = () => {
         </div>
 
         <Card className="shadow-soft mb-6">
-          <CardContent className="p-4">
+          <CardContent className="p-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -521,6 +582,40 @@ const History = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Data Inicial</label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Data Final</label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                    setSearchTerm("");
+                  }}
+                  className="w-full"
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -563,6 +658,15 @@ const History = () => {
                         <Download className="mr-2 h-4 w-4" />
                         PDF
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteClick(sale)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </Button>
                     </div>
                   </div>
                 </CardHeader>
@@ -593,6 +697,29 @@ const History = () => {
             ))
           )}
         </div>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir a venda de <strong>{saleToDelete?.customer_name}</strong>?
+                <br />
+                <br />
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

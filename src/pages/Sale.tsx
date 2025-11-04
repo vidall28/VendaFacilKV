@@ -9,6 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import jsPDF from "jspdf";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Product {
   id: string;
@@ -40,6 +50,7 @@ const Sale = () => {
   const [customerName, setCustomerName] = useState("");
   const [shippingWeight, setShippingWeight] = useState("");
   const [noFreight, setNoFreight] = useState(false); // Checkbox para não cobrar frete
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -198,7 +209,7 @@ const Sale = () => {
     return weight * shippingPricePerKg;
   };
 
-  const handleFinishSale = async () => {
+  const handleFinishSale = () => {
     if (items.length === 0) {
       toast.error("Adicione pelo menos um produto");
       return;
@@ -208,6 +219,13 @@ const Sale = () => {
       toast.error("Informe o nome do cliente");
       return;
     }
+
+    // Abre modal de confirmação
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmFinish = async () => {
+    setConfirmDialogOpen(false);
 
     const saleData = {
       total: calculateTotal(),
@@ -990,6 +1008,54 @@ const Sale = () => {
             </CardContent>
           </Card>
         </div>
+
+        <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {isEditMode ? "Confirmar Alterações" : "Confirmar Finalização"}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {isEditMode ? (
+                  <>
+                    Tem certeza que deseja salvar as alterações na venda de <strong>{customerName}</strong>?
+                    <br />
+                    <br />
+                    Total: <strong>R$ {calculateTotal().toFixed(2)}</strong>
+                    {parseFloat(shippingWeight) > 0 && (
+                      <>
+                        <br />
+                        Frete: <strong>R$ {calculateShippingFee().toFixed(2)}</strong>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja finalizar a venda para <strong>{customerName}</strong>?
+                    <br />
+                    <br />
+                    Total: <strong>R$ {calculateTotal().toFixed(2)}</strong>
+                    {parseFloat(shippingWeight) > 0 && (
+                      <>
+                        <br />
+                        Frete: <strong>R$ {calculateShippingFee().toFixed(2)}</strong>
+                      </>
+                    )}
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmFinish}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isEditMode ? "Salvar" : "Finalizar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
