@@ -286,6 +286,12 @@ const History = () => {
             pdf.text('R$ ${sale.total.toFixed(2)}', margin + 140, yPosition + 10);
             
             ${sale.shipping_fee > 0 ? `
+            // Verificar se há espaço para o frete (precisa de ~50 unidades)
+            if (yPosition > 230) {
+              pdf.addPage();
+              yPosition = 30;
+            }
+            
             // Espaço maior antes do frete
             yPosition += 30;
             
