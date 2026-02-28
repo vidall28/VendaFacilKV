@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Auth() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -13,14 +14,15 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  // Usa o contexto já existente — evita chamar getSession() diretamente,
+  // o que gerava uma tentativa extra de refresh simultânea com o AuthContext.
+  const { session } = useAuth();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/');
-      }
-    });
-  }, [navigate]);
+    if (session) {
+      navigate('/');
+    }
+  }, [session, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +57,8 @@ export default function Auth() {
       toast({
         variant: 'destructive',
         title: 'Erro ao entrar',
-        description: error.message === 'Invalid login credentials' 
-          ? 'Email ou senha incorretos' 
+        description: error.message === 'Invalid login credentials'
+          ? 'Email ou senha incorretos'
           : error.message,
       });
     } else {

@@ -36,12 +36,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // portanto não é necessário chamar getSession() separadamente.
     // Múltiplas chamadas de getSession() + listeners duplicados causam loop de refresh (429).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        // TOKEN_REFRESH_FAILED = o client falhou em refrescar (ex: 429 ou token inválido).
+        // Nesse caso, limpamos o estado e redirecionamos para o login —
+        // evitando que o Supabase continue tentando refrescar em loop.
+        if (event === 'TOKEN_REFRESH_FAILED') {
+          setSession(null);
+          setUser(null);
+          setShopName(null);
+          setLogoUrl(null);
+          setShippingPricePerKg(0);
+          // Remove tokens stale do localStorage para que na próxima visita
+          // o client não tente refrescar um token já inválido.
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith('sb-'))
+            .forEach((k) => localStorage.removeItem(k));
+          navigate('/auth');
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          fetchShopName(session.user.id); // chamada direta, sem setTimeout
+          fetchShopName(session.user.id);
         } else {
           setShopName(null);
           setLogoUrl(null);
@@ -51,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const fetchShopName = async (userId: string) => {
     const { data } = await supabase
